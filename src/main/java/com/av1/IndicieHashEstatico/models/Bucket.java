@@ -9,17 +9,17 @@ public class Bucket {
     private int capacidade;
 
     private List<EntradaIndice> bucketPrincipal;
-    private List<EntradaIndice> overflow;
+    private List<EntradaIndice> overflows;
     private int colisao;
-    private int contadorOverflows;
+    private boolean overflow;
 
     public Bucket(int id, int capacidade) {
         this.id = id;
         this.capacidade = capacidade;
         this.bucketPrincipal = new ArrayList<>();
-        this.overflow = new ArrayList<>();
+        this.overflows = new ArrayList<>();
         this.colisao = 0;
-        this.contadorOverflows = 0;
+        this.overflow = false;
     }
 
     public void adicionar (String chave, int pagina) {
@@ -31,7 +31,7 @@ public class Bucket {
             }
         }
 
-        for (EntradaIndice entradaIndice : overflow) {
+        for (EntradaIndice entradaIndice : overflows) {
             if (entradaIndice.getChave().equals(chave)) {
                 entradaIndice.setPagina(pagina);
                 return;
@@ -45,8 +45,10 @@ public class Bucket {
         if (bucketPrincipal.size() < capacidade) {
             bucketPrincipal.add(new EntradaIndice(chave, pagina));
         } else {
-            contadorOverflows++;
-            overflow.add(new EntradaIndice(chave, pagina));
+            overflows.add(new EntradaIndice(chave, pagina));
+            if (!overflow) {
+                overflow = true;
+            }
         }
     }
 
@@ -58,16 +60,16 @@ public class Bucket {
         return bucketPrincipal;
     }
 
-    public List<EntradaIndice> getOverflow() {
-        return overflow;
+    public List<EntradaIndice> getOverflows() {
+        return overflows;
     }
 
     public int getColisao() {
         return colisao;
     }
 
-    public int getContadorOverflows() {
-        return contadorOverflows;
+    public boolean isOverflow() {
+        return overflow;
     }
 
     public int getId() {

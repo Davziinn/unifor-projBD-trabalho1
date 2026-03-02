@@ -1,9 +1,6 @@
 package com.av1.IndicieHashEstatico.models;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,6 +57,32 @@ public class Pagina {
         paginas.add(paginaAtual);
         reader.close();
 
+        return paginas;
+    }
+
+    public List<Pagina> carregarArquivo(InputStream inputStream, int tamanhoPagina) throws IOException {
+        List<Pagina> paginas = new ArrayList<>();
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        String linha;
+
+        int numeroPagina = 0;
+        Pagina paginaAtual = new Pagina(numeroPagina);
+
+        while ((linha = reader.readLine()) != null) {
+            String[] palavras = linha.split("\\s+");
+
+            for (String palavra : palavras) {
+                if (paginaAtual.getPalavras().size() >= tamanhoPagina) {
+                    paginas.add(paginaAtual);
+                    numeroPagina++;
+                    paginaAtual = new Pagina(numeroPagina);
+                }
+                paginaAtual.addRegistro(palavra);
+            }
+        }
+
+        paginas.add(paginaAtual);
         return paginas;
     }
 }
