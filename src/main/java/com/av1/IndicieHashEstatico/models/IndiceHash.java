@@ -2,7 +2,6 @@ package com.av1.IndicieHashEstatico.models;
 
 import com.av1.IndicieHashEstatico.dto.ResultadoBuscaResponseDTO;
 import lombok.Data;
-import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;

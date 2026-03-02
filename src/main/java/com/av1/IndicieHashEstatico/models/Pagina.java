@@ -1,9 +1,12 @@
 package com.av1.IndicieHashEstatico.models;
 
+import lombok.Data;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Data
 public class Pagina {
 
     private int numero;

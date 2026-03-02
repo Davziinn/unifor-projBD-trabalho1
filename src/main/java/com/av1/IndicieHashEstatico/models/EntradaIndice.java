@@ -1,5 +1,8 @@
 package com.av1.IndicieHashEstatico.models;
 
+import lombok.Data;
+
+@Data
 public class EntradaIndice {
 
     private String chave;
@@ -10,15 +13,4 @@ public class EntradaIndice {
         this.pagina = pagina;
     }
 
-    public String getChave() {
-        return chave;
-    }
-
-    public int getPagina() {
-        return pagina;
-    }
-
-    public void setPagina(int pagina) {
-        this.pagina = pagina;
-    }
 }

@@ -1,8 +1,11 @@
 package com.av1.IndicieHashEstatico.models;
 
+import lombok.Data;
+
 import java.util.ArrayList;
 import java.util.List;
 
+@Data
 public class Bucket {
 
     private int id;
@@ -56,23 +59,4 @@ public class Bucket {
         return bucketPrincipal.size() >= capacidade;
     }
 
-    public List<EntradaIndice> getBucketPrincipal() {
-        return bucketPrincipal;
-    }
-
-    public List<EntradaIndice> getOverflows() {
-        return overflows;
-    }
-
-    public int getColisao() {
-        return colisao;
-    }
-
-    public boolean isOverflow() {
-        return overflow;
-    }
-
-    public int getId() {
-        return id;
-    }
 }
