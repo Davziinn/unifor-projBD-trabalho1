@@ -74,18 +74,33 @@ public class IndiceHash {
     }
 
     public ResultadoBuscaResponseDTO buscarTableScan(String chave, List<Pagina> paginas) {
+
+        long inicio = System.nanoTime();
+
         int custo = 0;
+        boolean encontrada = false;
+        int paginaEncontrada = -1;
+
         for (Pagina pagina : paginas) {
             for (String palavra : pagina.getPalavras()) {
                 custo++;
+
                 if (palavra.equals(chave)) {
-                    System.out.println("Custo da busca (Table Scan): " + custo);
-//                    return pagina.getNumero();
+                    encontrada = true;
+                    paginaEncontrada = pagina.getNumero();
+
+                    long fim = System.nanoTime();
+                    long tempo = fim - inicio;
+
+                    return new ResultadoBuscaResponseDTO(encontrada, paginaEncontrada, custo, tempo);
                 }
             }
         }
-        System.out.println("Custo da busca (Table Scan): " + custo);
-        return null;
+
+        long fim = System.nanoTime();
+        long tempo = fim - inicio;
+
+        return new ResultadoBuscaResponseDTO(encontrada, paginaEncontrada, custo, tempo);
     }
 
     public Bucket getBucket(int id) {

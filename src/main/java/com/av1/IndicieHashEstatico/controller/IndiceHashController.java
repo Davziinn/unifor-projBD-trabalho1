@@ -1,5 +1,6 @@
 package com.av1.IndicieHashEstatico.controller;
 
+import com.av1.IndicieHashEstatico.dto.MetricasResponseDTO;
 import com.av1.IndicieHashEstatico.dto.ResultadoBuscaResponseDTO;
 import com.av1.IndicieHashEstatico.service.IndiceHashService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,16 @@ public class IndiceHashController {
         try {
             ResultadoBuscaResponseDTO palavraBuscada = service.buscarScan(palavra);
             return ResponseEntity.ok().body(palavraBuscada);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/metricas")
+    public ResponseEntity<MetricasResponseDTO> buscarMetricas() {
+        try {
+            MetricasResponseDTO metricas = service.getMetricas();
+            return ResponseEntity.ok(metricas);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

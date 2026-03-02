@@ -1,6 +1,8 @@
 package com.av1.IndicieHashEstatico.dto;
 
+import lombok.Data;
 
+@Data
 public class ResultadoBuscaResponseDTO {
     private final boolean encontrada;
     private final int pagina;
@@ -12,21 +14,5 @@ public class ResultadoBuscaResponseDTO {
         this.pagina = pagina;
         this.custo = custo;
         this.tempoNano = tempoNano;
-    }
-
-    public boolean isEncontrada() {
-        return encontrada;
-    }
-
-    public int getPagina() {
-        return pagina;
-    }
-
-    public int getCusto() {
-        return custo;
-    }
-
-    public long getTempoNano() {
-        return tempoNano;
     }
 }

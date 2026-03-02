@@ -1,5 +1,6 @@
 package com.av1.IndicieHashEstatico.service;
 
+import com.av1.IndicieHashEstatico.dto.MetricasResponseDTO;
 import com.av1.IndicieHashEstatico.models.*;
 import com.av1.IndicieHashEstatico.dto.ResultadoBuscaResponseDTO;
 import org.springframework.stereotype.Service;
@@ -40,11 +41,13 @@ public class IndiceHashService {
         return indiceHash.buscarTableScan(palavra, paginas); // depois vamos refatorar para DTO
     }
 
-    public double getTaxaColisao() {
-        return indiceHash.getTaxaColisao();
-    }
-
-    public double getTaxaOverflow() {
-        return indiceHash.getTaxaOverflow();
+    public MetricasResponseDTO getMetricas() {
+        if (indiceHash == null) {
+            throw new IllegalStateException("Índice ainda não foi construído");
+        }
+        return new MetricasResponseDTO(
+                indiceHash.getTaxaColisao(),
+                indiceHash.getTaxaOverflow()
+        );
     }
 }
