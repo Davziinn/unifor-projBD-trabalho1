@@ -1,10 +1,8 @@
 package com.av1.IndicieHashEstatico.controller;
 
-import com.av1.IndicieHashEstatico.dto.MetricasResponseDTO;
-import com.av1.IndicieHashEstatico.dto.ResultadoBuscaResponseDTO;
+import com.av1.IndicieHashEstatico.dto.*;
 import com.av1.IndicieHashEstatico.service.IndiceHashService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,16 +15,17 @@ public class IndiceHashController {
     private IndiceHashService service;
 
     @PostMapping("/construir")
-    public ResponseEntity<String> construirIndice(
-                @RequestParam MultipartFile arquivo,
-                @RequestParam int tamanhoPagina,
-                @RequestParam int numeroBuckets,
-                @RequestParam int capacidadeBucket) {
+    public ResponseEntity<?> construirIndice(
+            @RequestParam("arquivo") MultipartFile arquivo,
+            @RequestParam("tamanhoPagina") int tamanhoPagina,
+            @RequestParam("numeroBuckets") int numeroBuckets,
+            @RequestParam("capacidadeBucket") int capacidadeBucket) {
         try {
-            service.construirIndice(arquivo, tamanhoPagina, numeroBuckets, capacidadeBucket);
-            return ResponseEntity.ok("Índice construído com sucesso");
+            ConstruirIndiceResponseDTO resp =
+                    service.construirIndice(arquivo, tamanhoPagina, numeroBuckets, capacidadeBucket);
+            return ResponseEntity.ok(resp);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Erro ao construir índice: " + e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -57,6 +56,28 @@ public class IndiceHashController {
             return ResponseEntity.ok(metricas);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/paginas/resumo")
+    public ResponseEntity<?> resumoPaginas() {
+        try {
+            ResumoPaginasResponseDTO resp = service.getResumoPaginas();
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/busca/scan-detalhado")
+    public ResponseEntity<?> buscarPeloScanDetalhado(
+            @RequestParam String palavra,
+            @RequestParam(required = false, defaultValue = "200") int limiteRegistros) {
+        try {
+            ResultadoScanDetalhadoResponseDTO resp = service.buscarScanDetalhado(palavra, limiteRegistros);
+            return ResponseEntity.ok(resp);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

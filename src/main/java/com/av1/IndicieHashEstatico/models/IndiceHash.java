@@ -1,6 +1,7 @@
 package com.av1.IndicieHashEstatico.models;
 
 import com.av1.IndicieHashEstatico.dto.ResultadoBuscaResponseDTO;
+import com.av1.IndicieHashEstatico.dto.ResultadoScanDetalhadoResponseDTO;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -32,7 +33,6 @@ public class IndiceHash {
     public ResultadoBuscaResponseDTO buscar(String chave) {
         long inicio = System.nanoTime();
 
-        int custo = 0;
         boolean encontrada = false;
         int pagina = -1;
 
@@ -40,7 +40,6 @@ public class IndiceHash {
         Bucket bucket = buckets.get(idBucket);
 
         for (EntradaIndice entradaIndice : bucket.getBucketPrincipal()) {
-            custo++;
             if (entradaIndice.getChave().equals(chave)) {
                 encontrada = true;
                 pagina = entradaIndice.getPagina();
@@ -50,7 +49,6 @@ public class IndiceHash {
 
         if (!encontrada) {
             for (EntradaIndice entradaIndice : bucket.getOverflows()) {
-                custo++;
                 if (entradaIndice.getChave().equals(chave)) {
                     encontrada = true;
                     pagina = entradaIndice.getPagina();
@@ -58,6 +56,9 @@ public class IndiceHash {
                 }
             }
         }
+
+        int custo = encontrada ? 1 : 0;
+
         long fim = System.nanoTime();
         long tempo = fim - inicio;
 
@@ -82,9 +83,9 @@ public class IndiceHash {
         int paginaEncontrada = -1;
 
         for (Pagina pagina : paginas) {
-            for (String palavra : pagina.getPalavras()) {
-                custo++;
+            custo++;
 
+            for (String palavra : pagina.getPalavras()) {
                 if (palavra.equals(chave)) {
                     encontrada = true;
                     paginaEncontrada = pagina.getNumero();
@@ -107,7 +108,7 @@ public class IndiceHash {
         return buckets.get(id);
     }
 
-    public void construirIndice (List<Pagina> paginas) {
+    public void construirIndice(List<Pagina> paginas) {
         for (Pagina pagina : paginas) {
             int numeroPagina = pagina.getNumero();
 
@@ -134,5 +135,45 @@ public class IndiceHash {
         }
 
         return (bucketEmOverflow / (double) buckets.size()) * 100;
+    }
+
+    public ResultadoScanDetalhadoResponseDTO buscarTableScanDetalhado(String chave, List<Pagina> paginas, int limiteRegistros) {
+
+        long inicio = System.nanoTime();
+
+        int custoPaginas = 0;
+        boolean encontrada = false;
+        int paginaEncontrada = -1;
+
+        List<String> lidos = new ArrayList<>();
+        boolean atingiuLimite = false;
+
+        for (Pagina pagina : paginas) {
+            custoPaginas++;
+
+            for (String palavra : pagina.getPalavras()) {
+
+                if (limiteRegistros > 0 && lidos.size() >= limiteRegistros) {
+                    atingiuLimite = true;
+                    break;
+                }
+
+                lidos.add(palavra);
+
+                if (palavra.equals(chave)) {
+                    encontrada = true;
+                    paginaEncontrada = pagina.getNumero();
+                    long fim = System.nanoTime();
+                    return new ResultadoScanDetalhadoResponseDTO(encontrada, paginaEncontrada, custoPaginas,
+                            fim - inicio, lidos, atingiuLimite);
+                }
+            }
+
+            if (atingiuLimite) break;
+        }
+
+        long fim = System.nanoTime();
+        return new ResultadoScanDetalhadoResponseDTO(encontrada, paginaEncontrada, custoPaginas,
+                fim - inicio, lidos, atingiuLimite);
     }
 }

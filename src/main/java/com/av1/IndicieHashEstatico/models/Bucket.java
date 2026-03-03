@@ -41,22 +41,15 @@ public class Bucket {
             }
         }
 
-        if (!bucketPrincipal.isEmpty()) {
-            colisao++;
-        }
-
         if (bucketPrincipal.size() < capacidade) {
             bucketPrincipal.add(new EntradaIndice(chave, pagina));
         } else {
+            colisao++;
             overflows.add(new EntradaIndice(chave, pagina));
             if (!overflow) {
                 overflow = true;
             }
         }
-    }
-
-    public boolean isCheio () {
-        return bucketPrincipal.size() >= capacidade;
     }
 
 }
