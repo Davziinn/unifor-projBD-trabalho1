@@ -1,7 +1,6 @@
 package com.av1.IndicieHashEstatico.models;
 
 import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +12,9 @@ public class Bucket {
 
     private List<EntradaIndice> bucketPrincipal;
     private List<EntradaIndice> overflows;
+
     private int colisao;
+    private int quantidadeOverflows;
     private boolean overflow;
 
     public Bucket(int id, int capacidade) {
@@ -22,10 +23,11 @@ public class Bucket {
         this.bucketPrincipal = new ArrayList<>();
         this.overflows = new ArrayList<>();
         this.colisao = 0;
+        this.quantidadeOverflows = 0;
         this.overflow = false;
     }
 
-    public void adicionar (String chave, int pagina) {
+    public void adicionar(String chave, int pagina) {
 
         for (EntradaIndice entradaIndice : bucketPrincipal) {
             if (entradaIndice.getChave().equals(chave)) {
@@ -43,13 +45,18 @@ public class Bucket {
 
         if (bucketPrincipal.size() < capacidade) {
             bucketPrincipal.add(new EntradaIndice(chave, pagina));
-        } else {
-            colisao++;
-            overflows.add(new EntradaIndice(chave, pagina));
-            if (!overflow) {
-                overflow = true;
-            }
+            return;
+        }
+
+        if (colisao == 0) {
+            colisao = 1;
+        }
+
+        overflows.add(new EntradaIndice(chave, pagina));
+        overflow = true;
+
+        if (overflows.size() % capacidade == 1) {
+            quantidadeOverflows++;
         }
     }
-
 }

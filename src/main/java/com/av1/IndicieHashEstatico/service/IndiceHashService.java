@@ -14,35 +14,40 @@ public class IndiceHashService {
     private IndiceHash indiceHash;
     private List<Pagina> paginas;
 
-    public ConstruirIndiceResponseDTO construirIndice(MultipartFile arquivo,
-                                                      int tamanhoPagina,
-                                                      int numeroBuckets,
-                                                      int capacidadeBucket) throws IOException {
+    public ConstruirIndiceResponseDTO construirIndice(
+            MultipartFile arquivo,
+            int tamanhoPagina,
+            int capacidadeBucket) throws IOException {
+
+        long inicio = System.nanoTime();
 
         Pagina loader = new Pagina(0);
         this.paginas = loader.carregarArquivo(arquivo.getInputStream(), tamanhoPagina);
 
-        int nr = 0;
-        for (Pagina p : paginas) {
-            nr += p.getPalavras().size();
+        int totalRegistros = 0;
+
+        for (Pagina pagina : paginas) {
+            totalRegistros += pagina.getPalavras().size();
         }
 
-        if ((long) numeroBuckets * (long) capacidadeBucket <= (long) nr) {
-            throw new IllegalArgumentException(
-                    "Configuração inválida: numeroBuckets * capacidadeBucket deve ser > totalRegistros (NR). " +
-                            "NR=" + nr + ", NB=" + numeroBuckets + ", FR=" + capacidadeBucket
-            );
-        }
+        int numeroBuckets = calcularNumeroBuckets(totalRegistros, capacidadeBucket);
 
         this.indiceHash = new IndiceHash(numeroBuckets, capacidadeBucket);
+        this.indiceHash.setTotalRegistros(totalRegistros);
 
-        long inicioConstrucao = System.nanoTime();
         this.indiceHash.construirIndice(paginas);
-        long fimConstrucao = System.nanoTime();
 
-        long tempoConstrucao = fimConstrucao - inicioConstrucao;
+        long fim = System.nanoTime();
 
-        return new ConstruirIndiceResponseDTO(nr, paginas.size(), tempoConstrucao);
+        long tempoNanoSegundos = fim - inicio;
+
+        return new ConstruirIndiceResponseDTO(
+                totalRegistros,
+                paginas.size(),
+                numeroBuckets,
+                capacidadeBucket,
+                tempoNanoSegundos
+        );
     }
 
     public ResultadoBuscaResponseDTO buscarHash(String palavra) {
@@ -96,5 +101,12 @@ public class IndiceHashService {
         }
         int limite = limiteRegistros <= 0 ? 200 : limiteRegistros;
         return indiceHash.buscarTableScanDetalhado(palavra, paginas, limite);
+    }
+
+    private int calcularNumeroBuckets(int totalRegistros, int capacidadeBucket) {
+
+        double minimo = (double) totalRegistros / capacidadeBucket;
+
+        return (int) Math.ceil(minimo) + 1;
     }
 }

@@ -12,7 +12,8 @@ public class IndiceHash {
 
     private List<Bucket> buckets;
     private HashFunction hashFunction;
-    private int totalRegistrosInseridos = 0;
+
+    private int totalRegistros = 0;
 
     public IndiceHash(int numeroBucket, int capacidadeBucket) {
         this.hashFunction = new HashFunction();
@@ -27,7 +28,6 @@ public class IndiceHash {
         int idBucket = hashFunction.hash(chave, buckets.size());
         Bucket bucket = buckets.get(idBucket);
         bucket.adicionar(chave, pagina);
-        totalRegistrosInseridos++;
     }
 
     public ResultadoBuscaResponseDTO buscar(String chave) {
@@ -70,12 +70,10 @@ public class IndiceHash {
         for (Bucket bucket : buckets) {
             total += bucket.getColisao();
         }
-
         return total;
     }
 
     public ResultadoBuscaResponseDTO buscarTableScan(String chave, List<Pagina> paginas) {
-
         long inicio = System.nanoTime();
 
         int custo = 0;
@@ -104,14 +102,9 @@ public class IndiceHash {
         return new ResultadoBuscaResponseDTO(encontrada, paginaEncontrada, custo, tempo);
     }
 
-    public Bucket getBucket(int id) {
-        return buckets.get(id);
-    }
-
     public void construirIndice(List<Pagina> paginas) {
         for (Pagina pagina : paginas) {
             int numeroPagina = pagina.getNumero();
-
             for (String palavra : pagina.getPalavras()) {
                 inserir(palavra, numeroPagina);
             }
@@ -119,26 +112,23 @@ public class IndiceHash {
     }
 
     public double getTaxaColisao() {
-        if (totalRegistrosInseridos == 0) {
-            return 0;
-        }
-        return (getTotalColisoes() / (double) totalRegistrosInseridos) * 100;
+        if (totalRegistros == 0) return 0;
+        return (getTotalColisoes() / (double) totalRegistros) * 100;
     }
 
     public double getTaxaOverflow() {
-        int bucketEmOverflow = 0;
+        if (buckets == null || buckets.isEmpty()) return 0;
+
+        int totalOverflows = 0;
 
         for (Bucket bucket : buckets) {
-            if (bucket.isOverflow()) {
-                bucketEmOverflow++;
-            }
+            totalOverflows += bucket.getQuantidadeOverflows();
         }
 
-        return (bucketEmOverflow / (double) buckets.size()) * 100;
+        return (totalOverflows / (double) buckets.size()) * 100;
     }
 
     public ResultadoScanDetalhadoResponseDTO buscarTableScanDetalhado(String chave, List<Pagina> paginas, int limiteRegistros) {
-
         long inicio = System.nanoTime();
 
         int custoPaginas = 0;
@@ -163,9 +153,12 @@ public class IndiceHash {
                 if (palavra.equals(chave)) {
                     encontrada = true;
                     paginaEncontrada = pagina.getNumero();
+
                     long fim = System.nanoTime();
-                    return new ResultadoScanDetalhadoResponseDTO(encontrada, paginaEncontrada, custoPaginas,
-                            fim - inicio, lidos, atingiuLimite);
+                    return new ResultadoScanDetalhadoResponseDTO(
+                            encontrada, paginaEncontrada, custoPaginas,
+                            fim - inicio, lidos, atingiuLimite
+                    );
                 }
             }
 
@@ -173,7 +166,9 @@ public class IndiceHash {
         }
 
         long fim = System.nanoTime();
-        return new ResultadoScanDetalhadoResponseDTO(encontrada, paginaEncontrada, custoPaginas,
-                fim - inicio, lidos, atingiuLimite);
+        return new ResultadoScanDetalhadoResponseDTO(
+                encontrada, paginaEncontrada, custoPaginas,
+                fim - inicio, lidos, atingiuLimite
+        );
     }
 }

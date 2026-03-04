@@ -18,11 +18,10 @@ public class IndiceHashController {
     public ResponseEntity<?> construirIndice(
             @RequestParam("arquivo") MultipartFile arquivo,
             @RequestParam("tamanhoPagina") int tamanhoPagina,
-            @RequestParam("numeroBuckets") int numeroBuckets,
             @RequestParam("capacidadeBucket") int capacidadeBucket) {
         try {
             ConstruirIndiceResponseDTO resp =
-                    service.construirIndice(arquivo, tamanhoPagina, numeroBuckets, capacidadeBucket);
+                    service.construirIndice(arquivo, tamanhoPagina, capacidadeBucket);
             return ResponseEntity.ok(resp);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
