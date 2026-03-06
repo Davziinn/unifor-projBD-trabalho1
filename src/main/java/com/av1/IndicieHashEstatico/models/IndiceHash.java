@@ -125,7 +125,7 @@ public class IndiceHash {
             totalOverflows += bucket.getQuantidadeOverflows();
         }
 
-        return (totalOverflows / (double) buckets.size()) * 100;
+        return (totalOverflows / (double) totalRegistros) * 100;
     }
 
     public ResultadoScanDetalhadoResponseDTO buscarTableScanDetalhado(String chave, List<Pagina> paginas, int limiteRegistros) {

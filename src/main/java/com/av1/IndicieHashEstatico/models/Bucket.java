@@ -55,7 +55,9 @@ public class Bucket {
         overflows.add(new EntradaIndice(chave, pagina));
         overflow = true;
 
-        if (overflows.size() % capacidade == 1) {
+        if (overflows.size() == 1) {
+            quantidadeOverflows = 1;
+        } else if (overflows.size() % capacidade == 0) {
             quantidadeOverflows++;
         }
     }
