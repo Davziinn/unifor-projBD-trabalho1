@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/indice")
+@CrossOrigin(origins = "*")
 public class IndiceHashController {
 
     @Autowired
