@@ -11,6 +11,9 @@ import java.util.List;
 @Service
 public class IndiceHashService {
 
+    private static final int LIMITE_SCAN_PADRAO = 200;
+    private static final String ERRO_INDICE_NAO_CONSTRUIDO = "Índice ainda não foi construído";
+
     private IndiceHash indiceHash;
     private List<Pagina> paginas;
 
@@ -19,55 +22,39 @@ public class IndiceHashService {
             int tamanhoPagina,
             int capacidadeBucket) throws IOException {
 
-        long inicio = System.nanoTime();
+        long inicioConstrucaoEmNanos = System.nanoTime();
 
-        Pagina loader = new Pagina(0);
-        this.paginas = loader.carregarArquivo(arquivo.getInputStream(), tamanhoPagina);
+        this.paginas = carregarPaginas(arquivo, tamanhoPagina);
 
-        int totalRegistros = 0;
-
-        for (Pagina pagina : paginas) {
-            totalRegistros += pagina.getPalavras().size();
-        }
-
+        int totalRegistros = contarRegistros(paginas);
         int numeroBuckets = calcularNumeroBuckets(totalRegistros, capacidadeBucket);
 
-        this.indiceHash = new IndiceHash(numeroBuckets, capacidadeBucket);
-        this.indiceHash.setTotalRegistros(totalRegistros);
-
+        this.indiceHash = new IndiceHash(numeroBuckets, capacidadeBucket, totalRegistros);
         this.indiceHash.construirIndice(paginas);
 
-        long fim = System.nanoTime();
-
-        long tempoNanoSegundos = fim - inicio;
+        long tempoDecorrido = System.nanoTime() - inicioConstrucaoEmNanos;
 
         return new ConstruirIndiceResponseDTO(
                 totalRegistros,
                 paginas.size(),
                 numeroBuckets,
                 capacidadeBucket,
-                tempoNanoSegundos
+                tempoDecorrido
         );
     }
 
     public ResultadoBuscaResponseDTO buscarHash(String palavra) {
-        if (indiceHash == null) {
-            throw new RuntimeException("Índice ainda não foi construído");
-        }
+        validarIndice();
         return indiceHash.buscar(palavra);
     }
 
     public ResultadoBuscaResponseDTO buscarScan(String palavra) {
-        if (indiceHash == null) {
-            throw new RuntimeException("Índice ainda não foi construído");
-        }
-        return indiceHash.buscarTableScan(palavra, paginas); // depois vamos refatorar para DTO
+        validarIndice();
+        return indiceHash.buscarTableScan(palavra, paginas);
     }
 
     public MetricasResponseDTO getMetricas() {
-        if (indiceHash == null) {
-            throw new IllegalStateException("Índice ainda não foi construído");
-        }
+        validarIndice();
         return new MetricasResponseDTO(
                 indiceHash.getTaxaColisao(),
                 indiceHash.getTaxaOverflow()
@@ -75,38 +62,55 @@ public class IndiceHashService {
     }
 
     public ResumoPaginasResponseDTO getResumoPaginas() {
-        if (paginas == null || paginas.isEmpty()) {
-            throw new IllegalStateException("Páginas ainda não foram carregadas. Construa o índice primeiro.");
-        }
+        validarPaginas();
 
         Pagina primeira = paginas.get(0);
         Pagina ultima = paginas.get(paginas.size() - 1);
 
-        PaginaResumoDTO primeiraDTO = new PaginaResumoDTO(
-                primeira.getNumero(),
-                primeira.getPrimeirasPalavras(5)
+        return new ResumoPaginasResponseDTO(
+                paginas.size(),
+                toPaginaResumoDTO(primeira),
+                toPaginaResumoDTO(ultima)
         );
-
-        PaginaResumoDTO ultimaDTO = new PaginaResumoDTO(
-                ultima.getNumero(),
-                ultima.getPrimeirasPalavras(5)
-        );
-
-        return new ResumoPaginasResponseDTO(paginas.size(), primeiraDTO, ultimaDTO);
     }
 
     public ResultadoScanDetalhadoResponseDTO buscarScanDetalhado(String palavra, int limiteRegistros) {
-        if (indiceHash == null || paginas == null) {
-            throw new IllegalStateException("Índice ainda não foi construído");
-        }
-        int limite = limiteRegistros <= 0 ? 200 : limiteRegistros;
+        validarIndice();
+        validarPaginas();
+
+        int limite = limiteRegistros <= 0 ? LIMITE_SCAN_PADRAO : limiteRegistros;
         return indiceHash.buscarTableScanDetalhado(palavra, paginas, limite);
     }
 
+
+    private List<Pagina> carregarPaginas(MultipartFile arquivo, int tamanhoPagina) throws IOException {
+        return new Pagina(0).carregarArquivo(arquivo.getInputStream(), tamanhoPagina);
+    }
+
+    private int contarRegistros(List<Pagina> paginas) {
+        return paginas.stream()
+                .mapToInt(p -> p.getPalavras().size())
+                .sum();
+    }
+
     private int calcularNumeroBuckets(int totalRegistros, int capacidadeBucket) {
-
         double minimo = (double) totalRegistros / capacidadeBucket;
-
         return (int) Math.ceil(minimo) + 1;
+    }
+
+    private PaginaResumoDTO toPaginaResumoDTO(Pagina pagina) {
+        return new PaginaResumoDTO(pagina.getNumero(), pagina.getPrimeirasPalavras(5));
+    }
+
+    private void validarIndice() {
+        if (indiceHash == null) {
+            throw new IllegalStateException(ERRO_INDICE_NAO_CONSTRUIDO);
+        }
+    }
+
+    private void validarPaginas() {
+        if (paginas == null || paginas.isEmpty()) {
+            throw new IllegalStateException("Páginas ainda não foram carregadas. Construa o índice primeiro.");
+        }
     }
 }

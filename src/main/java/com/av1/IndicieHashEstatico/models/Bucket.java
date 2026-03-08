@@ -27,7 +27,7 @@ public class Bucket {
         this.overflow = false;
     }
 
-    public void adicionar(String chave, int pagina) {
+    public void adicionarBucket(String chave, int pagina) {
 
         for (EntradaIndice entradaIndice : bucketPrincipal) {
             if (entradaIndice.getChave().equals(chave)) {
