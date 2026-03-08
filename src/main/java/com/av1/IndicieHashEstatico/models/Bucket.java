@@ -1,21 +1,21 @@
 package com.av1.IndicieHashEstatico.models;
 
-import lombok.Data;
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Getter
 public class Bucket {
 
-    private int id;
-    private int capacidade;
+    private final int id;
+    private final int capacidade;
 
-    private List<EntradaIndice> bucketPrincipal;
-    private List<EntradaIndice> overflows;
+    private final List<EntradaIndice> bucketPrincipal;
+    private final List<EntradaIndice> overflows;
 
     private int colisao;
     private int quantidadeOverflows;
-    private boolean overflow;
 
     public Bucket(int id, int capacidade) {
         this.id = id;
@@ -24,41 +24,50 @@ public class Bucket {
         this.overflows = new ArrayList<>();
         this.colisao = 0;
         this.quantidadeOverflows = 0;
-        this.overflow = false;
     }
-
     public void adicionarBucket(String chave, int pagina) {
+        if (atualizarSeExistir(chave, pagina)) return;
 
-        for (EntradaIndice entradaIndice : bucketPrincipal) {
-            if (entradaIndice.getChave().equals(chave)) {
-                entradaIndice.setPagina(pagina);
-                return;
-            }
-        }
-
-        for (EntradaIndice entradaIndice : overflows) {
-            if (entradaIndice.getChave().equals(chave)) {
-                entradaIndice.setPagina(pagina);
-                return;
-            }
-        }
-
-        if (bucketPrincipal.size() < capacidade) {
+        if (bucketPrincipalNaoEstaCheia()) {
             bucketPrincipal.add(new EntradaIndice(chave, pagina));
             return;
         }
 
-        if (colisao == 0) {
-            colisao = 1;
+        adicionarOverflow(chave, pagina);
+    }
+
+
+    private boolean atualizarSeExistir(String chave, int pagina) {
+        if (atualizarNaLista(bucketPrincipal, chave, pagina)) return true;
+        if (atualizarNaLista(overflows, chave, pagina)) return true;
+        return false;
+    }
+
+    private boolean atualizarNaLista(List<EntradaIndice> lista, String chave, int pagina) {
+        for (EntradaIndice entrada : lista) {
+            if (entrada.getChave().equals(chave)) {
+                entrada.setPagina(pagina);
+                return true;
+            }
         }
+        return false;
+    }
+
+    private boolean bucketPrincipalNaoEstaCheia() {
+        return bucketPrincipal.size() < capacidade;
+    }
+
+    private void adicionarOverflow(String chave, int pagina) {
+        if (colisao == 0) colisao = 1;
 
         overflows.add(new EntradaIndice(chave, pagina));
-        overflow = true;
 
-        if (overflows.size() == 1) {
-            quantidadeOverflows = 1;
-        } else if (overflows.size() % capacidade == 0) {
+        if (overflows.size() == 1 || overflows.size() % capacidade == 0) {
             quantidadeOverflows++;
         }
+    }
+
+    public int getTotalEntradas() {
+        return bucketPrincipal.size() + overflows.size();
     }
 }
